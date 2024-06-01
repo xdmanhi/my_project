@@ -1,5 +1,7 @@
+from typing import Optional
+
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, class_mapper
 
 engine = create_async_engine('sqlite+aiosqlite:///tasks.db')
 
@@ -12,7 +14,11 @@ class TaskORM(Model):
     
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
-    description: Mapped[str | None]
+    description: Mapped[Optional[str]] = None
+
+    def to_dict(self):
+        return {c.key: getattr(self, c.key)
+                for c in class_mapper(self.__class__).columns}
     
 async def create_tables():
     async with engine.begin() as conn:
